@@ -1,0 +1,32 @@
+name: Build & Deploy WAR to Tomcat
+
+on:
+  push:
+    branches:
+      - master  # Ya jo bhi aapka default branch hai
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Source Code
+      uses: actions/checkout@v3
+
+    - name: Set up Java (JDK 11)
+      uses: actions/setup-java@v3
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+
+    - name: Build WAR File Using Maven
+      run: mvn clean package
+
+    - name: Upload WAR to Tomcat via SCP
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: ${{ secrets.DEPLOY_HOST }}
+        username: ${{ secrets.DEPLOY_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        source: "target/*.war"
+        target: "/app/apache-tomcat-9.0.41/webapps/"
